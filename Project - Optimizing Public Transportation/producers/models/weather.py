@@ -8,7 +8,7 @@ import urllib.parse
 
 import requests
 
-from producers.models.producer import Producer
+from models.producer import Producer
 
 
 logger = logging.getLogger(__name__)
@@ -30,12 +30,16 @@ class Weather(Producer):
     summer_months = set((6, 7, 8))
 
     def __init__(self, month):
+        #
+        #
+        # TODO: Complete the below by deciding on a topic name, number of partitions, and number of
+        # replicas
+        #
+        #
         super().__init__(
-            "chicago_weather", # TODO: Come up with a better topic name
+            topic_name=f"org.chicago.cta.weather.v1", # TODO: Come up with a better topic name
             key_schema=Weather.key_schema,
-            value_schema=Weather.value_schema,
-            num_partitions=3,
-            num_replicas=3
+            value_schema=Weather.value_schema
         )
 
         self.status = Weather.status.sunny
@@ -73,19 +77,32 @@ class Weather(Producer):
         # Setting the appropriate headers
         # See: https://docs.confluent.io/current/kafka-rest/api.html#content-types
         headers = {"Content-Type": "application/vnd.kafka.avro.v2+json"}
-        data = {
-                "key_schema": Weather.key_schema,,
-                "value_schema": Weather.value_schema,
-                "records": [{"value":{'temperature': self.temp, 'status': self.status}}]
-        }
+        json_data = json.dumps(
+            {
+                "key_schema": json.dumps(Weather.key_schema),
+                "value_schema": json.dumps(Weather.value_schema),
+                "records": [
+                    {
+                        "key": {
+                            "timestamp": self.time_millis()
+                            },
+                        "value":{
+                            'temperature': self.temp,
+                            'status': self.status.name
+                        }
+                    }
+                ]
+            }
+        )
         resp = requests.post(
-                f"{Weather.rest_proxy_url}/topics/chicago.weather",
-                data = json.dumps(data),
-                headers = headers
+                f"{Weather.rest_proxy_url}/topics/{self.topic_name}",
+                headers = headers,
+                data = json_data
         )
 
         try:
             resp.raise_for_status()
+            print(resp.raise_for_status())
         except:
             logger.warning(
                     "Failed to send weather data to kafka, temp: %s, status: %s",

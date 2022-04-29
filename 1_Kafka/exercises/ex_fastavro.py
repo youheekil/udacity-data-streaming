@@ -22,10 +22,10 @@ records = [
 ]
 
 # Writing
-with open('weather.avro', 'wb') as out:
+with open('../weather.avro', 'wb') as out:
     writer(out, parsed_schema, records)
 
 # Reading
-with open('weather.avro', 'rb') as fo:
+with open('../weather.avro', 'rb') as fo:
     for record in reader(fo):
         print(record)

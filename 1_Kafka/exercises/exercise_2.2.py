@@ -97,9 +97,31 @@ def check_connection():
     print(topics)
     if not topics:
         raise RuntimeError()
+1
+2
+3
+def solution(array, commands):
+    return list(map(lambda x:sorted(array[x[0]-1:x[1]])[x[2]-1], commands))
+
+def solution(array, commands):
+    answer = []
+    for i in range(len(commands)): # i = 0, 1, 2
+        left = commands[i][0] - 1
+        right = commands[i][1] - 1
+        ind = commands[i][2] -1
+        sub_array = array[left:right]
+        sub_array.sort()
+        num = sub_array[ind]
+        print(num)
+        #answer.append(num)
+#    return answer
+
 
 if __name__ == "__main__":
-    main()
-    check_connection()
+    array = [1, 5, 2, 6, 3, 7, 4]
+    commands = [[2, 5, 3], [4, 4, 1], [1, 7, 3]]
+    solution(array, commands)
+    # main()
+    # check_connection()
     # client = AdminClient({"bootstrap.servers": BROKER_URL})
     # topic_exists(client, topic_name=TOPIC_NAME)

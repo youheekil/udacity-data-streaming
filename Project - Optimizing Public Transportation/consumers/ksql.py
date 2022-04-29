@@ -32,13 +32,14 @@ CREATE TABLE turnstile (
     station_name VARCHAR, 
     line VARCHAR
 ) WITH (KAFKA_TOPIC='turnstile_station',
-        VALUE_FORMAT='avro');
+        VALUE_FORMAT='AVRO', 
+        KEY = 'station_id');
 
 CREATE TABLE turnstile_summary
-WITH (KAFKA_TOPIC='turnstile_station', VALUE_FORMAT='json') AS # TODO: DOUBLE CHECK
-    SELECT COUNT(station_id) AS count 
+WITH (VALUE_FORMAT='JSON') AS 
+    SELECT station_id, COUNT(station_id) AS count
     FROM turnstile
-    GROUP BY station_id
+    GROUP BY station_id;
 """
 
 
@@ -47,7 +48,7 @@ def execute_statement():
     if topic_check.topic_exists("TURNSTILE_SUMMARY") is True:
         return
 
-    logging.debug("executing ksql statement...")
+    logger.debug("executing ksql statement...")
 
     resp = requests.post(
         f"{KSQL_URL}/ksql",
@@ -66,3 +67,4 @@ def execute_statement():
 
 if __name__ == "__main__":
     execute_statement()
+

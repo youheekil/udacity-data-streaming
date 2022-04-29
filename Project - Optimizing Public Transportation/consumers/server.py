@@ -12,6 +12,7 @@ import tornado.web
 logging.config.fileConfig(f"{Path(__file__).parents[0]}/logging.ini")
 
 
+import ksql
 from consumer import KafkaConsumer
 from models import Lines, Weather
 import topic_check
@@ -41,12 +42,14 @@ class MainHandler(tornado.web.RequestHandler):
 
 def run_server():
     """Runs the Tornado Server and begins Kafka consumption"""
+    # Configure KSQL
+    ksql.execute_statement()
     if topic_check.topic_exists("TURNSTILE_SUMMARY") is False:
         logger.fatal(
             "Ensure that the KSQL Command has run successfully before running the web server!"
         )
         exit(1)
-    if topic_check.topic_exists("org.chicago.cta.stations.table.v1") is False:
+    if topic_check.topic_exists("stations.table") is False:
         logger.fatal(
             "Ensure that Faust Streaming is running successfully before running the web server!"
         )
@@ -58,7 +61,7 @@ def run_server():
     application = tornado.web.Application(
         [(r"/", MainHandler, {"weather": weather_model, "lines": lines})]
     )
-    application.listen(8888)
+    application.listen(3000)
 
     # Build kafka consumers
     consumers = [
@@ -68,13 +71,13 @@ def run_server():
             offset_earliest=True,
         ),
         KafkaConsumer(
-            "org.chicago.cta.stations.table.v1",
+            "stations.table",
             lines.process_message,
             offset_earliest=True,
             is_avro=False,
         ),
         KafkaConsumer(
-            "^org.chicago.cta.station.arrivals.",
+            "arrival.station.(.(\w*|\.))*",
             lines.process_message,
             offset_earliest=True,
         ),
@@ -87,12 +90,14 @@ def run_server():
     ]
 
     try:
-        logger.info(
-            "Open a web browser to http://localhost:8888 to see the Transit Status Page"
-        )
+
         for consumer in consumers:
             tornado.ioloop.IOLoop.current().spawn_callback(consumer.consume)
 
+        logger.info(
+            "Click on the Preview button to see the Transit Status Page"
+            "If running locally - Open a web browser to http://localhost:3000 to see the Transit Status Page"
+        )
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt as e:
         logger.info("shutting down server")
@@ -103,3 +108,4 @@ def run_server():
 
 if __name__ == "__main__":
     run_server()
+

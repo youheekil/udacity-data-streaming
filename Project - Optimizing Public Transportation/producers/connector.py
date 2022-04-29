@@ -44,10 +44,9 @@ def configure_connector():
                 "connection.password": "chicago",
                 "table.whitelist": "stations",
                 "mode": "incrementing",
-                "incrementing.column.name": "station_id",
+                "incrementing.column.name": "stop_id",
                 "topic.prefix": "postgre_connect_",
-               # how frequently Kafka Connect should run this connector (hint: not very often!)
-                "poll.interval.ms": "", # TODO: DOUBLE CHECK
+                "poll.interval.ms": "10000", # TODO: DOUBLE CHECK
             }
         }),
     )

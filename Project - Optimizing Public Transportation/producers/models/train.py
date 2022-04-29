@@ -25,3 +25,4 @@ class Train:
 
     def broken(self):
         return self.status == Train.status.broken_down
+

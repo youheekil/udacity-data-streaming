@@ -1,3 +1,4 @@
+# producers/models/producer.py
 """Producer base-class providing common utilites and functionality"""
 import logging
 import time
@@ -35,7 +36,7 @@ class Producer:
         self.broker_properties = {
                 "BROKER_URL"         : "PLAINTEXT://localhost:9092", # for docker -> 29092
                 "SCHEMA_REGISTRY_URL": "http://localhost:8081",
-                "group.id"           : f"{self.topic_name}",
+                # "group.id"           : f"{self.topic_name}",
         }
 
 
@@ -43,34 +44,45 @@ class Producer:
         if self.topic_name not in Producer.existing_topics:
             self.create_topic()
             Producer.existing_topics.add(self.topic_name)
+        
 
         # Configure the AvroProducer
+        
         self.producer = AvroProducer(
-                {'bootstrap.servers': 'localhost:9092', # for docker -> 29092
-                 'schema.registry.url': 'http://127.0.0.1:8081'},
+                {'bootstrap.servers': self.broker_properties["BROKER_URL"]}, # for docker -> 29092
                 schema_registry = CachedSchemaRegistryClient(
-                        {"url": self.broker_properties['SCHEMA_REGISTRY_URL']})
+                        {"url": self.broker_properties['SCHEMA_REGISTRY_URL']}),
+                default_key_schema=key_schema,
+                default_value_schema=value_schema
                 )
-
+        
+        
     def create_topic(self):
         """Creates the producer topic if it does not already exist"""
         # Configure the AdminClient with 'bootstrap.servers'
         # See: https://docs.confluent.io/current/clients/confluent-kafka-python/#confluent_kafka.admin.AdminClient
-        client = AdminClient({"bootstrap.servers": BROKER_URL})
+        client = AdminClient({"bootstrap.servers": self.broker_properties['BROKER_URL']})
 
         # Create a NewTopic object
         # See: https://docs.confluent.io/current/clients/confluent-kafka-python/#confluent_kafka.admin.NewTopic
         topic = NewTopic(topic = self.topic_name,
                          num_partitions=self.num_partitions,
-                         replication_factor=self.replication_factor)
+                         replication_factor = self.num_replicas,
+                        )
 
         # Using 'client', create the topic
         # See: https://docs.confluent.io/current/clients/confluent-kafka-python/#confluent_kafka.admin.AdminClient.create_topics
-        client.create_topics([topic])
-
-
-    def time_millis(self):
-        return int(round(time.time() * 1000))
+        futures = client.create_topics([topic])
+                        
+        for topic, future in futures.items():
+            try:
+                future.result()
+                print(f"topic created {topic}")
+            except Exception as e:
+                msg = f"failed to create topic: {e}"
+                logger.fatal(msg)
+                print(msg)
+                raise
 
     def close(self):
         """Prepares the producer for exit by cleaning up the producer"""
