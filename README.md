@@ -1,7 +1,7 @@
 
 
 <p align="center" width="100%">
-    <img width="22%" src="KAFKA_LOGO.png">
+    <img width="60%" src="KAFKA_LOGO.png">
 </p>
 
 <h1 align="center">Data Streaming Nanodegree</h1>
