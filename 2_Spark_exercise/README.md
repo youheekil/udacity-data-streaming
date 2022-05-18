@@ -5,6 +5,9 @@
 3. Identify the URI for Spark Master
 4. Start the Spark Worker
 5. Submit the your Spark application (e.g. hellospark.py)
+
+**click `code` below**
+
 <details>
 <summary>code</summary>
 
