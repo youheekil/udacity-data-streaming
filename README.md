@@ -1,10 +1,10 @@
 
 
-<p align="center" width="100%">
-    <img width="60%" src="KAFKA_LOGO.png">
-</p>
 
 <h1 align="center">Data Streaming Nanodegree</h1>
+<p align="center" width="100%">
+    <img width="40%" src="KAFKA_LOGO.png">
+</p>
 
 <h3 align="center">Udacity Nanodegree</h3>
 
